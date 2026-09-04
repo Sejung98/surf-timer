@@ -467,25 +467,25 @@ body {
 
 /* 3-1. 작업표시줄 도킹 모드 (Taskbar Dock) */
 .surf-card.taskbar-docked {
-  width: 180px !important;
-  height: 38px !important;
-  min-width: 180px !important;
-  min-height: 38px !important;
-  border-radius: 19px !important;
+  width: 190px !important;
+  height: 44px !important;
+  min-width: 190px !important;
+  min-height: 44px !important;
+  border-radius: 22px !important;
   padding: 0 !important;
   margin: 0 !important;
-  background: rgba(25, 28, 33, 0.85) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
+  background: rgba(25, 28, 33, 0.92) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.40) !important;
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
   overflow: hidden !important;
 }
 
 [data-theme="light"] .surf-card.taskbar-docked {
-  background: rgba(255, 255, 255, 0.88) !important;
-  border: 1px solid rgba(0, 0, 0, 0.10) !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  border: 1px solid rgba(0, 0, 0, 0.14) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
 }
 
 .surf-card.taskbar-docked .surf-header,
