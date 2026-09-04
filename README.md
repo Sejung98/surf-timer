@@ -38,6 +38,7 @@ To all fellow students, researchers, and lifelong learners: please feel free to 
 
 ### Desktop Widget Controls
 - Always on Top: Pin the widget to keep it visible above code editors, PDF readers, and reference materials.
+- Taskbar Dock Mode: Dock the timer into a sleek 180 x 38 px capsule positioned at the bottom-left corner of the Windows taskbar, allowing real-time countdown monitoring right on the taskbar.
 - Compact Menu Bar Mode: Collapse the widget into a slim pill (170 x 48 px) that fits neatly into any screen corner.
 - Free Dragging: Grab anywhere on the header or card background to move the widget across multiple displays.
 - System Tray Integration: Minimize to the Windows system tray and manage visibility seamlessly.

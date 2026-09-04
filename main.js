@@ -4,12 +4,15 @@ const path = require('path');
 let mainWindow = null;
 let tray = null;
 let isCompact = false;
-let isPinned = true; // 기본적으로 위젯이므로 항상 위 고정
+let isPinned = true;
+let isTaskbarDocked = false;
+let savedNormalBounds = null;
 
-// 윈도우 표준 크기 및 컴팩트 크기 정의 (가로는 길고 세로는 짧은 Flow 카드 비율)
+// 윈도우 표준 크기 및 컴팩트 크기 정의
 const SIZES = {
   normal: { width: 390, height: 245 },
-  compact: { width: 170, height: 48 }
+  compact: { width: 170, height: 48 },
+  taskbar: { width: 180, height: 38 }
 };
 
 function createWindow() {
@@ -91,6 +94,39 @@ function createTray() {
         }
       }
     },
+    {
+      label: '작업표시줄에 도킹',
+      type: 'checkbox',
+      checked: isTaskbarDocked,
+      click: (menuItem) => {
+        isTaskbarDocked = !isTaskbarDocked;
+        const primaryDisplay = screen.getPrimaryDisplay();
+        const { width: screenWidth, height: screenHeight } = primaryDisplay.bounds;
+        const workArea = primaryDisplay.workArea;
+
+        if (isTaskbarDocked) {
+          if (!savedNormalBounds) savedNormalBounds = mainWindow.getBounds();
+          mainWindow.setSize(SIZES.taskbar.width, SIZES.taskbar.height, false);
+          const taskbarHeight = screenHeight - workArea.height;
+          const dockX = 10;
+          const dockY = (taskbarHeight > 0)
+            ? workArea.height + Math.max(2, Math.floor((taskbarHeight - SIZES.taskbar.height) / 2))
+            : screenHeight - SIZES.taskbar.height - 4;
+          mainWindow.setPosition(dockX, dockY, false);
+          mainWindow.setAlwaysOnTop(true, 'screen-saver');
+          mainWindow.webContents.send('taskbar-dock-changed', true);
+        } else {
+          mainWindow.setSize(SIZES.normal.width, SIZES.normal.height, false);
+          if (savedNormalBounds) {
+            mainWindow.setPosition(savedNormalBounds.x, savedNormalBounds.y, false);
+          } else {
+            mainWindow.setPosition(screenWidth - SIZES.normal.width - 24, 48, false);
+          }
+          mainWindow.setAlwaysOnTop(isPinned);
+          mainWindow.webContents.send('taskbar-dock-changed', false);
+        }
+      }
+    },
     { type: 'separator' },
     {
       label: '종료',
@@ -132,18 +168,62 @@ ipcMain.on('toggle-pin', (event, forceValue) => {
 
 ipcMain.on('toggle-compact-mode', (event, forceMode) => {
   if (!mainWindow) return;
-
   isCompact = typeof forceMode === 'boolean' ? forceMode : !isCompact;
-  const targetSize = isCompact ? SIZES.compact : SIZES.normal;
 
-  mainWindow.setSize(targetSize.width, targetSize.height, true);
-  event.reply('compact-mode-changed', isCompact);
+  if (isCompact) {
+    if (!isTaskbarDocked && !isCompact) savedNormalBounds = mainWindow.getBounds();
+    mainWindow.setSize(SIZES.compact.width, SIZES.compact.height, false);
+    event.reply('compact-mode-changed', true);
+  } else {
+    mainWindow.setSize(SIZES.normal.width, SIZES.normal.height, false);
+    if (savedNormalBounds) {
+      mainWindow.setPosition(savedNormalBounds.x, savedNormalBounds.y, false);
+    }
+    event.reply('compact-mode-changed', false);
+  }
+});
+
+ipcMain.on('toggle-taskbar-dock', (event, forceMode) => {
+  if (!mainWindow) return;
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.bounds;
+  const workArea = primaryDisplay.workArea;
+
+  isTaskbarDocked = typeof forceMode === 'boolean' ? forceMode : !isTaskbarDocked;
+
+  if (isTaskbarDocked) {
+    if (!isTaskbarDocked) savedNormalBounds = mainWindow.getBounds();
+    else if (!savedNormalBounds) savedNormalBounds = mainWindow.getBounds();
+
+    mainWindow.setSize(SIZES.taskbar.width, SIZES.taskbar.height, false);
+    
+    // Windows 작업표시줄 좌측 하단 (스크린샷에 표시된 빨간 박스 영역)
+    const taskbarHeight = screenHeight - workArea.height;
+    const dockX = 10;
+    const dockY = (taskbarHeight > 0)
+      ? workArea.height + Math.max(2, Math.floor((taskbarHeight - SIZES.taskbar.height) / 2))
+      : screenHeight - SIZES.taskbar.height - 4;
+
+    mainWindow.setPosition(dockX, dockY, false);
+    mainWindow.setAlwaysOnTop(true, 'screen-saver');
+    event.reply('taskbar-dock-changed', true);
+  } else {
+    mainWindow.setSize(SIZES.normal.width, SIZES.normal.height, false);
+    if (savedNormalBounds) {
+      mainWindow.setPosition(savedNormalBounds.x, savedNormalBounds.y, false);
+    } else {
+      mainWindow.setPosition(screenWidth - SIZES.normal.width - 24, 48, false);
+    }
+    mainWindow.setAlwaysOnTop(isPinned);
+    event.reply('taskbar-dock-changed', false);
+  }
 });
 
 ipcMain.handle('get-window-state', () => {
   return {
     isPinned,
-    isCompact
+    isCompact,
+    isTaskbarDocked
   };
 });
 

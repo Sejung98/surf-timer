@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   closeWindow: () => ipcRenderer.send('window-close'),
   togglePin: (forceValue) => ipcRenderer.send('toggle-pin', forceValue),
   toggleCompactMode: (forceMode) => ipcRenderer.send('toggle-compact-mode', forceMode),
+  toggleTaskbarDock: (forceMode) => ipcRenderer.send('toggle-taskbar-dock', forceMode),
   getWindowState: () => ipcRenderer.invoke('get-window-state'),
   onPinChanged: (callback) => {
     const handler = (_event, value) => callback(value);
@@ -15,5 +16,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const handler = (_event, value) => callback(value);
     ipcRenderer.on('compact-mode-changed', handler);
     return () => ipcRenderer.removeListener('compact-mode-changed', handler);
+  },
+  onTaskbarDockChanged: (callback) => {
+    const handler = (_event, value) => callback(value);
+    ipcRenderer.on('taskbar-dock-changed', handler);
+    return () => ipcRenderer.removeListener('taskbar-dock-changed', handler);
   }
 });

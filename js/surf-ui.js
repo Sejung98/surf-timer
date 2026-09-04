@@ -10,6 +10,7 @@ class SurfUIController {
 
     this.isCompact = false;
     this.isPinned = true;
+    this.isTaskbarDocked = false;
 
     this.initDOMElements();
     this.initEventListeners();
@@ -52,6 +53,15 @@ class SurfUIController {
       compactTime: document.getElementById('compact-time'),
       compactBtnPlay: document.getElementById('compact-btn-play'),
       compactBtnExpand: document.getElementById('compact-btn-expand'),
+
+      // 작업표시줄 도킹 모드
+      btnDockTaskbar: document.getElementById('btn-dock-taskbar'),
+      taskbarDockView: document.getElementById('taskbar-dock-view'),
+      taskbarDockTime: document.getElementById('taskbar-dock-time'),
+      taskbarBtnPlay: document.getElementById('taskbar-btn-play'),
+      taskbarIconPlay: document.getElementById('taskbar-icon-play'),
+      taskbarIconPause: document.getElementById('taskbar-icon-pause'),
+      taskbarBtnUndock: document.getElementById('taskbar-btn-undock'),
 
       // 설정 모달
       settingsModal: document.getElementById('settings-modal'),
@@ -157,6 +167,28 @@ class SurfUIController {
       this.toggleCompactMode(false);
     });
 
+    // 작업표시줄 도킹 모드 버튼
+    if (this.dom.btnDockTaskbar) {
+      this.dom.btnDockTaskbar.addEventListener('click', () => {
+        this.sound.playClick();
+        this.toggleTaskbarDock(true);
+      });
+    }
+
+    if (this.dom.taskbarBtnPlay) {
+      this.dom.taskbarBtnPlay.addEventListener('click', () => {
+        this.sound.playClick();
+        this.timer.togglePlayPause();
+      });
+    }
+
+    if (this.dom.taskbarBtnUndock) {
+      this.dom.taskbarBtnUndock.addEventListener('click', () => {
+        this.sound.playClick();
+        this.toggleTaskbarDock(false);
+      });
+    }
+
     this.dom.btnClose.addEventListener('click', () => {
       this.sound.playClick();
       if (window.electronAPI) {
@@ -181,10 +213,12 @@ class SurfUIController {
     if (window.electronAPI) {
       window.electronAPI.onPinChanged((pinned) => this.updatePinUI(pinned));
       window.electronAPI.onCompactChanged((compact) => this.updateCompactUI(compact));
+      window.electronAPI.onTaskbarDockChanged((docked) => this.updateTaskbarDockUI(docked));
       window.electronAPI.getWindowState().then((state) => {
         if (state) {
           this.updatePinUI(state.isPinned);
           this.updateCompactUI(state.isCompact);
+          if (state.isTaskbarDocked) this.updateTaskbarDockUI(true);
         }
       });
     }
@@ -208,6 +242,9 @@ class SurfUIController {
     const timeStr = this.formatTime(remainingSeconds);
     this.dom.timerDisplay.textContent = timeStr;
     this.dom.compactTime.textContent = timeStr;
+    if (this.dom.taskbarDockTime) {
+      this.dom.taskbarDockTime.textContent = timeStr;
+    }
   }
 
   handleTimerStateChange({ mode, state }) {
@@ -215,6 +252,10 @@ class SurfUIController {
     if (isRunning) {
       this.dom.iconPlay.classList.add('hidden');
       this.dom.iconPause.classList.remove('hidden');
+      if (this.dom.taskbarIconPlay && this.dom.taskbarIconPause) {
+        this.dom.taskbarIconPlay.classList.add('hidden');
+        this.dom.taskbarIconPause.classList.remove('hidden');
+      }
       this.dom.compactBtnPlay.innerHTML = `
         <svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:currentColor;">
           <rect x="6" y="5" width="4" height="14" rx="1"/>
@@ -224,6 +265,10 @@ class SurfUIController {
     } else {
       this.dom.iconPlay.classList.remove('hidden');
       this.dom.iconPause.classList.add('hidden');
+      if (this.dom.taskbarIconPlay && this.dom.taskbarIconPause) {
+        this.dom.taskbarIconPlay.classList.remove('hidden');
+        this.dom.taskbarIconPause.classList.add('hidden');
+      }
       this.dom.compactBtnPlay.innerHTML = `
         <svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:currentColor;">
           <polygon points="8,5 18,12 8,19"/>
@@ -297,6 +342,27 @@ class SurfUIController {
       this.dom.card.classList.add('compact-mode');
     } else {
       this.dom.card.classList.remove('compact-mode');
+    }
+  }
+
+  toggleTaskbarDock(forceMode) {
+    const target = (typeof forceMode === 'boolean') ? forceMode : !this.isTaskbarDocked;
+    if (window.electronAPI) {
+      window.electronAPI.toggleTaskbarDock(target);
+    } else {
+      this.updateTaskbarDockUI(target);
+    }
+  }
+
+  updateTaskbarDockUI(isDocked) {
+    this.isTaskbarDocked = isDocked;
+    if (isDocked) {
+      this.dom.card.classList.remove('compact-mode');
+      this.dom.card.classList.add('taskbar-docked');
+      if (this.dom.btnDockTaskbar) this.dom.btnDockTaskbar.classList.add('active');
+    } else {
+      this.dom.card.classList.remove('taskbar-docked');
+      if (this.dom.btnDockTaskbar) this.dom.btnDockTaskbar.classList.remove('active');
     }
   }
 
