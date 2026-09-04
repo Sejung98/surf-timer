@@ -16,9 +16,10 @@ function createWindow() {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
 
-  // 기본 위치: 화면 우측 상단 근처 (윈도우 위젯에 최적)
   const defaultX = screenWidth - SIZES.normal.width - 24;
   const defaultY = 48;
+
+  const iconIco = path.join(__dirname, 'assets', 'icon.ico');
 
   mainWindow = new BrowserWindow({
     width: SIZES.normal.width,
@@ -33,12 +34,13 @@ function createWindow() {
     fullscreenable: false,
     skipTaskbar: false,
     hasShadow: true,
+    icon: iconIco,
     backgroundColor: '#00000000',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      backgroundThrottling: false // 백그라운드에서도 타이머가 멈추지 않도록 설정
+      backgroundThrottling: false
     }
   });
 
@@ -49,9 +51,6 @@ function createWindow() {
     mainWindow.focus();
   });
 
-  // 디버깅 필요 시 활성화 가능
-  // mainWindow.webContents.openDevTools({ mode: 'detach' });
-
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
@@ -60,18 +59,10 @@ function createWindow() {
 }
 
 function createTray() {
-  // 16x16 투명 트레이 아이콘 생성 (인라인 SVG/Canvas 대응용 빈 이미지 또는 도트)
-  // 윈도우에서 트레이가 정상 작동하도록 16x16 빈 비트맵 아이콘 생성
-  const icon = nativeImage.createFromBuffer(
-    Buffer.from(
-      'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAZElEQVQ4T2NkIBIwEqmOgTpg1ADG' +
-      '////f0TjYxgG5P+DCk7AwMDABqEZYGJA5uPDpBgGQj5Athmku4kBM0FkNyh0QfP/GAYE1DEwNDCh' +
-      'hT5u46hhGJDhBhj/oBhKzBiE4eGPhv4YGAyEwA8A5n0/U7450UoAAAAASUVORK5CYII=',
-      'base64'
-    )
-  );
+  const iconPath = path.join(__dirname, 'assets', 'icon.png');
+  const trayIcon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 });
 
-  tray = new Tray(icon);
+  tray = new Tray(trayIcon);
   tray.setToolTip('Surf Timer');
 
   const contextMenu = Menu.buildFromTemplate([

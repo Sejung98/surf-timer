@@ -4,9 +4,15 @@ A minimalist focus and Pomodoro desktop timer widget for Windows, inspired by mo
 
 ---
 
-## Overview
+## Why I Built This
 
-Surf Timer is designed to keep you in the flow while working on Windows. It floats unobtrusively on your desktop with an ultra-clean horizontal card design, smooth frosted glassmorphism, and intuitive session tracking.
+While conducting academic research, I constantly found myself in need of a distraction-free, elegant timer to maintain deep focus during long study and writing sessions. Existing tools were often cluttered, distracting, or occupied too much valuable screen estate. I built Surf Timer to serve as a lightweight, beautiful companion that stays quietly on the desktop.
+
+---
+
+## For Students and Researchers
+
+To all fellow students, researchers, and lifelong learners: please feel free to use Surf Timer freely in your daily work, experiments, and studies. May this small tool bring clarity to your deep work, calm to your breaks, and great success to everyone's research journeys.
 
 ---
 
@@ -21,18 +27,19 @@ Surf Timer is designed to keep you in the flow while working on Windows. It floa
 - Focus Session (Surf): Default 25 minutes (adjustable from 5 to 90 minutes, with quick presets for 15m, 25m, 45m, 50m, and 60m).
 - Short Break: Default 5 minutes (adjustable from 1 to 30 minutes, with quick presets for 3m, 5m, 10m, and 15m).
 - Long Break: Default 15 minutes, configurable interval (default every 4 completed cycles).
+- Precision Stepper Controls: Instant plus and minus stepper buttons for quick fine-tuning alongside smooth sliders.
 - Optional automatic transitions for breaks and subsequent focus sessions.
 - Session extension (+5m) and instant skip controls.
 
 ### Daily Session Dot Indicator and Reset
 - Completed cycles are rendered directly beneath the timer display as pill-shaped indicator dots.
 - Active sessions pulse gently to indicate ongoing progress.
-- Flexible one-click reset option: Click the counter dots or the reset icon in the top header to reset today's completed cycle count at any time.
+- Flexible one-click reset: Click the counter dots or the reset icon in the top header to reset today's completed cycle count at any time.
 
 ### Desktop Widget Controls
-- Always on Top: Pin the widget to keep it visible above code editors, browsers, and reference materials.
+- Always on Top: Pin the widget to keep it visible above code editors, PDF readers, and reference materials.
 - Compact Menu Bar Mode: Collapse the widget into a slim pill (170 x 48 px) that fits neatly into any screen corner.
-- Free Dragging: Grab anywhere on the header or background card to move the widget across multiple monitors.
+- Free Dragging: Grab anywhere on the header or card background to move the widget across multiple displays.
 - System Tray Integration: Minimize to the Windows system tray and manage visibility seamlessly.
 
 ### Pure Synthesized Zen Chimes
@@ -78,4 +85,4 @@ If you prefer running inside a web browser, open `index.html` directly in any mo
 
 ## License
 
-MIT License. Free for personal and commercial productivity use.
+MIT License. Completely open source and free for all students, researchers, and creators to use, adapt, and share.
