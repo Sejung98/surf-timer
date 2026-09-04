@@ -56,6 +56,7 @@ class SurfUIController {
 
       // 작업표시줄 도킹 모드
       btnDockTaskbar: document.getElementById('btn-dock-taskbar'),
+      btnNewWindow: document.getElementById('btn-new-window'),
       taskbarDockView: document.getElementById('taskbar-dock-view'),
       taskbarDockTime: document.getElementById('taskbar-dock-time'),
       taskbarBtnPlay: document.getElementById('taskbar-btn-play'),
@@ -175,15 +176,36 @@ class SurfUIController {
       });
     }
 
+    // 새 타이머 창 띄우기 버튼 (+)
+    if (this.dom.btnNewWindow) {
+      this.dom.btnNewWindow.addEventListener('click', () => {
+        this.sound.playClick();
+        if (window.electronAPI && window.electronAPI.createNewWindow) {
+          window.electronAPI.createNewWindow();
+        }
+      });
+    }
+
     if (this.dom.taskbarBtnPlay) {
-      this.dom.taskbarBtnPlay.addEventListener('click', () => {
+      this.dom.taskbarBtnPlay.addEventListener('click', (e) => {
+        e.stopPropagation();
         this.sound.playClick();
         this.timer.togglePlayPause();
       });
     }
 
     if (this.dom.taskbarBtnUndock) {
-      this.dom.taskbarBtnUndock.addEventListener('click', () => {
+      this.dom.taskbarBtnUndock.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.sound.playClick();
+        this.toggleTaskbarDock(false);
+      });
+    }
+
+    // 도킹 캡슐 더블클릭 시 즉시 원래 크기로 복원
+    if (this.dom.taskbarDockView) {
+      this.dom.taskbarDockView.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
         this.sound.playClick();
         this.toggleTaskbarDock(false);
       });

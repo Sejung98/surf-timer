@@ -1,37 +1,78 @@
 const { app, BrowserWindow, ipcMain, screen, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 
-let mainWindow = null;
-let tray = null;
-let isCompact = false;
-let isPinned = true;
-let isTaskbarDocked = false;
-let savedNormalBounds = null;
+// 1. 단일 인스턴스 락 (Single Instance Lock)
+// 사용자가 바탕화면 아이콘을 다시 누를 때 새 프로세스가 중복 실행되지 않고 기존 창을 복원 및 포커스
+const gotTheLock = app.requestSingleInstanceLock();
 
-// 윈도우 표준 크기 및 컴팩트 크기 정의
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    // 기존 창이 작업표시줄에 도킹되어 있거나 최소화되어 있다면 즉시 원래 크기로 복원하고 맨 앞으로 표시
+    for (const win of windows) {
+      if (win.isDestroyed()) continue;
+      if (win.isMinimized()) win.restore();
+      if (win._isTaskbarDocked) {
+        setTaskbarDock(win, false);
+      }
+      win.show();
+      win.focus();
+    }
+  });
+
+  initApp();
+}
+
+const windows = new Set();
+let tray = null;
+let windowCounter = 0;
+
+// 윈도우 표준 크기 및 모드별 크기 정의
 const SIZES = {
   normal: { width: 390, height: 245 },
   compact: { width: 170, height: 48 },
   taskbar: { width: 190, height: 44 }
 };
 
+function initApp() {
+  app.whenReady().then(() => {
+    createWindow();
+    createTray();
+
+    app.on('activate', () => {
+      if (windows.size === 0) createWindow();
+    });
+  });
+
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+      app.quit();
+    }
+  });
+}
+
 function createWindow() {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
 
-  const defaultX = screenWidth - SIZES.normal.width - 24;
-  const defaultY = 48;
+  // 새 창을 띄울 때 이전 창과 살짝 겹치지 않게 오프셋 적용
+  const offset = (windowCounter % 8) * 32;
+  windowCounter++;
+
+  const defaultX = Math.max(50, screenWidth - SIZES.normal.width - 24 - offset);
+  const defaultY = Math.min(screenHeight - SIZES.normal.height - 50, 48 + offset);
 
   const iconIco = path.join(__dirname, 'assets', 'icon.ico');
 
-  mainWindow = new BrowserWindow({
+  const win = new BrowserWindow({
     width: SIZES.normal.width,
     height: SIZES.normal.height,
     x: defaultX,
     y: defaultY,
     frame: false,
     transparent: true,
-    alwaysOnTop: isPinned,
+    alwaysOnTop: true,
     resizable: false,
     maximizable: false,
     fullscreenable: false,
@@ -47,18 +88,68 @@ function createWindow() {
     }
   });
 
-  mainWindow.loadFile('index.html');
+  // 창별 개별 상태 저장
+  win._isPinned = true;
+  win._isCompact = false;
+  win._isTaskbarDocked = false;
+  win._savedNormalBounds = null;
 
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
-    mainWindow.focus();
+  windows.add(win);
+
+  win.loadFile('index.html');
+
+  win.once('ready-to-show', () => {
+    win.show();
+    win.focus();
   });
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
+  win.on('closed', () => {
+    windows.delete(win);
   });
 
-  createTray();
+  return win;
+}
+
+function setTaskbarDock(win, docked) {
+  if (!win || win.isDestroyed()) return;
+  win._isTaskbarDocked = (typeof docked === 'boolean') ? docked : !win._isTaskbarDocked;
+
+  const currentDisplay = screen.getDisplayMatching(win.getBounds()) || screen.getPrimaryDisplay();
+  const { workArea } = currentDisplay;
+
+  if (win._isTaskbarDocked) {
+    if (!win._savedNormalBounds) {
+      win._savedNormalBounds = win.getBounds();
+    }
+
+    // 도킹된 여러 창이 있을 경우 가로로 나란히 배치
+    let dockIndex = 0;
+    for (const w of windows) {
+      if (w === win) break;
+      if (w._isTaskbarDocked) dockIndex++;
+    }
+
+    const dockX = workArea.x + 12 + (dockIndex * (SIZES.taskbar.width + 10));
+    const dockY = workArea.y + workArea.height - SIZES.taskbar.height - 6;
+
+    win.setSize(SIZES.taskbar.width, SIZES.taskbar.height, false);
+    win.setPosition(dockX, dockY, false);
+    win.setAlwaysOnTop(true);
+    win.show();
+    win.focus();
+    win.webContents.send('taskbar-dock-changed', true);
+  } else {
+    win.setSize(SIZES.normal.width, SIZES.normal.height, false);
+    if (win._savedNormalBounds) {
+      win.setPosition(win._savedNormalBounds.x, win._savedNormalBounds.y, false);
+    } else {
+      win.setPosition(workArea.x + workArea.width - SIZES.normal.width - 24, workArea.y + 48, false);
+    }
+    win.setAlwaysOnTop(win._isPinned !== false);
+    win.show();
+    win.focus();
+    win.webContents.send('taskbar-dock-changed', false);
+  }
 }
 
 function createTray() {
@@ -70,36 +161,20 @@ function createTray() {
 
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: 'Surf Timer 표시/숨기기',
+      label: '모든 타이머 표시 (복원)',
       click: () => {
-        if (mainWindow) {
-          if (mainWindow.isVisible()) {
-            mainWindow.hide();
-          } else {
-            mainWindow.show();
-            mainWindow.focus();
-          }
+        for (const win of windows) {
+          if (win.isDestroyed()) continue;
+          if (win._isTaskbarDocked) setTaskbarDock(win, false);
+          win.show();
+          win.focus();
         }
       }
     },
     {
-      label: '항상 위에 고정',
-      type: 'checkbox',
-      checked: isPinned,
-      click: (menuItem) => {
-        isPinned = menuItem.checked;
-        if (mainWindow) {
-          mainWindow.setAlwaysOnTop(isPinned);
-          mainWindow.webContents.send('pin-status-changed', isPinned);
-        }
-      }
-    },
-    {
-      label: '작업표시줄 하단 도킹',
-      type: 'checkbox',
-      checked: isTaskbarDocked,
-      click: (menuItem) => {
-        setTaskbarDock(menuItem.checked);
+      label: '새 타이머 창 열기 (+)',
+      click: () => {
+        createWindow();
       }
     },
     { type: 'separator' },
@@ -114,113 +189,83 @@ function createTray() {
   tray.setContextMenu(contextMenu);
 
   tray.on('click', () => {
-    if (mainWindow) {
-      if (mainWindow.isVisible()) {
-        mainWindow.focus();
-      } else {
-        mainWindow.show();
+    // 트레이 클릭 시 도킹되거나 숨겨진 모든 창을 원래 크기로 복원하여 표시
+    for (const win of windows) {
+      if (win.isDestroyed()) continue;
+      if (win._isTaskbarDocked) {
+        setTaskbarDock(win, false);
       }
+      win.show();
+      win.focus();
     }
   });
 }
 
-// IPC 통신 핸들러 등록
-ipcMain.on('window-minimize', () => {
-  if (mainWindow) mainWindow.minimize();
+// IPC 통신 핸들러 등록 (요청한 창에 대해 독립적으로 처리)
+ipcMain.on('window-minimize', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) win.minimize();
 });
 
-ipcMain.on('window-close', () => {
-  if (mainWindow) mainWindow.close();
+ipcMain.on('window-close', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) win.close();
 });
 
 ipcMain.on('toggle-pin', (event, forceValue) => {
-  if (mainWindow) {
-    isPinned = typeof forceValue === 'boolean' ? forceValue : !isPinned;
-    mainWindow.setAlwaysOnTop(isPinned);
-    event.reply('pin-status-changed', isPinned);
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) {
+    win._isPinned = typeof forceValue === 'boolean' ? forceValue : !win._isPinned;
+    win.setAlwaysOnTop(win._isPinned);
+    event.reply('pin-status-changed', win._isPinned);
   }
 });
 
 ipcMain.on('toggle-compact-mode', (event, forceMode) => {
-  if (!mainWindow) return;
-  isCompact = typeof forceMode === 'boolean' ? forceMode : !isCompact;
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) return;
 
-  if (isCompact) {
-    if (!isTaskbarDocked && !isCompact) savedNormalBounds = mainWindow.getBounds();
-    mainWindow.setSize(SIZES.compact.width, SIZES.compact.height, false);
+  win._isCompact = typeof forceMode === 'boolean' ? forceMode : !win._isCompact;
+
+  if (win._isCompact) {
+    if (!win._isTaskbarDocked && !win._isCompact) win._savedNormalBounds = win.getBounds();
+    win.setSize(SIZES.compact.width, SIZES.compact.height, false);
     event.reply('compact-mode-changed', true);
   } else {
-    mainWindow.setSize(SIZES.normal.width, SIZES.normal.height, false);
-    if (savedNormalBounds) {
-      mainWindow.setPosition(savedNormalBounds.x, savedNormalBounds.y, false);
+    win.setSize(SIZES.normal.width, SIZES.normal.height, false);
+    if (win._savedNormalBounds) {
+      win.setPosition(win._savedNormalBounds.x, win._savedNormalBounds.y, false);
     }
     event.reply('compact-mode-changed', false);
   }
 });
 
-function setTaskbarDock(docked) {
-  if (!mainWindow) return;
-  isTaskbarDocked = (typeof docked === 'boolean') ? docked : !isTaskbarDocked;
-
-  const currentDisplay = screen.getDisplayMatching(mainWindow.getBounds()) || screen.getPrimaryDisplay();
-  const { workArea } = currentDisplay;
-
-  if (isTaskbarDocked) {
-    if (!savedNormalBounds) {
-      savedNormalBounds = mainWindow.getBounds();
-    }
-    // 작업표시줄 바로 위 좌측 하단 (Windows 작업표시줄에 가려지지 않고 100% 노출되는 위치)
-    const dockX = workArea.x + 12;
-    const dockY = workArea.y + workArea.height - SIZES.taskbar.height - 6;
-
-    mainWindow.setSize(SIZES.taskbar.width, SIZES.taskbar.height, false);
-    mainWindow.setPosition(dockX, dockY, false);
-    mainWindow.setAlwaysOnTop(true);
-    mainWindow.show();
-    mainWindow.focus();
-    mainWindow.webContents.send('taskbar-dock-changed', true);
-  } else {
-    mainWindow.setSize(SIZES.normal.width, SIZES.normal.height, false);
-    if (savedNormalBounds) {
-      mainWindow.setPosition(savedNormalBounds.x, savedNormalBounds.y, false);
-    } else {
-      mainWindow.setPosition(workArea.x + workArea.width - SIZES.normal.width - 24, workArea.y + 48, false);
-    }
-    mainWindow.setAlwaysOnTop(isPinned);
-    mainWindow.show();
-    mainWindow.focus();
-    mainWindow.webContents.send('taskbar-dock-changed', false);
-  }
-}
-
 ipcMain.on('toggle-taskbar-dock', (event, forceMode) => {
-  setTaskbarDock(forceMode);
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) {
+    setTaskbarDock(win, forceMode);
+  }
+});
+
+ipcMain.on('create-new-window', () => {
+  createWindow();
 });
 
 ipcMain.on('update-timer-progress', (event, progress) => {
-  if (mainWindow) {
-    mainWindow.setProgressBar(typeof progress === 'number' ? progress : -1);
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) {
+    win.setProgressBar(typeof progress === 'number' ? progress : -1);
   }
 });
 
-ipcMain.handle('get-window-state', () => {
-  return {
-    isPinned,
-    isCompact,
-    isTaskbarDocked
-  };
-});
-
-app.whenReady().then(() => {
-  createWindow();
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  });
-});
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
+ipcMain.handle('get-window-state', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) {
+    return {
+      isPinned: win._isPinned,
+      isCompact: win._isCompact,
+      isTaskbarDocked: win._isTaskbarDocked
+    };
   }
+  return { isPinned: true, isCompact: false, isTaskbarDocked: false };
 });

@@ -34,9 +34,14 @@
             <circle cx="8" cy="12" r="2" fill="currentColor"/>
           </svg>
         </button>
-        <button id="btn-dock-taskbar" class="surf-icon-btn" title="작업표시줄 왼쪽 끝으로 보내기 (Dock to Taskbar)">
+        <button id="btn-dock-taskbar" class="surf-icon-btn" title="작업표시줄 위에 도킹 (Dock to Taskbar)">
           <svg viewBox="0 0 24 24">
             <path d="M4 18h16v2H4v-2zm8-14v9.17l3.59-3.58L17 11l-5 5-5-5 1.41-1.41L11 13.17V4h2z" fill="currentColor"/>
+          </svg>
+        </button>
+        <button id="btn-new-window" class="surf-icon-btn" title="새 타이머 창 열기 (+)">
+          <svg viewBox="0 0 24 24">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/>
           </svg>
         </button>
       </div>
@@ -151,7 +156,7 @@
     </div>
 
     <!-- 3-1. 작업표시줄 도킹 모드 전용 뷰 -->
-    <div id="taskbar-dock-view" class="surf-taskbar-dock-view">
+    <div id="taskbar-dock-view" class="surf-taskbar-dock-view" title="더블 클릭 시 원래 크기로 복원됩니다">
       <div class="taskbar-dock-inner">
         <img src="assets/icon.png" class="taskbar-dock-icon" alt="Surf Timer">
         <span id="taskbar-dock-time" class="taskbar-dock-time">25:00</span>
@@ -164,7 +169,7 @@
             <rect x="14.5" y="5" width="3.5" height="14" rx="1"/>
           </svg>
         </button>
-        <button id="taskbar-btn-undock" class="taskbar-mini-btn" title="Expand to Normal Widget">
+        <button id="taskbar-btn-undock" class="taskbar-mini-btn taskbar-btn-undock" title="원래 위젯 크기로 복원 (클릭 또는 더블클릭)">
           <svg viewBox="0 0 24 24">
             <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-14v3h3v2h-5V5h2z" fill="currentColor"/>
           </svg>
