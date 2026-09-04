@@ -197,6 +197,12 @@ ipcMain.on('toggle-taskbar-dock', (event, forceMode) => {
   setTaskbarDock(forceMode);
 });
 
+ipcMain.on('update-timer-progress', (event, progress) => {
+  if (mainWindow) {
+    mainWindow.setProgressBar(typeof progress === 'number' ? progress : -1);
+  }
+});
+
 ipcMain.handle('get-window-state', () => {
   return {
     isPinned,

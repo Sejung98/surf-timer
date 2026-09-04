@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   togglePin: (forceValue) => ipcRenderer.send('toggle-pin', forceValue),
   toggleCompactMode: (forceMode) => ipcRenderer.send('toggle-compact-mode', forceMode),
   toggleTaskbarDock: (forceMode) => ipcRenderer.send('toggle-taskbar-dock', forceMode),
+  setProgressBar: (progress) => ipcRenderer.send('update-timer-progress', progress),
   getWindowState: () => ipcRenderer.invoke('get-window-state'),
   onPinChanged: (callback) => {
     const handler = (_event, value) => callback(value);

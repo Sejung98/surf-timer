@@ -245,6 +245,17 @@ class SurfUIController {
     if (this.dom.taskbarDockTime) {
       this.dom.taskbarDockTime.textContent = timeStr;
     }
+
+    // Windows 작업표시줄 아이콘에 실시간 진행률 프로그레스 바 표시
+    if (window.electronAPI && window.electronAPI.setProgressBar) {
+      if (this.timer.state === 'running') {
+        const total = this.timer.totalSeconds || 1500;
+        const progress = Math.max(0.01, Math.min(1, 1 - (remainingSeconds / total)));
+        window.electronAPI.setProgressBar(progress);
+      } else {
+        window.electronAPI.setProgressBar(-1);
+      }
+    }
   }
 
   handleTimerStateChange({ mode, state }) {
@@ -274,6 +285,9 @@ class SurfUIController {
           <polygon points="8,5 18,12 8,19"/>
         </svg>
       `;
+      if (window.electronAPI && window.electronAPI.setProgressBar) {
+        window.electronAPI.setProgressBar(-1);
+      }
     }
 
     // 레이블 변경
