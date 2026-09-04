@@ -383,10 +383,9 @@ class SurfUIController {
 
   toggleTaskbarDock(forceMode) {
     const target = (typeof forceMode === 'boolean') ? forceMode : !this.isTaskbarDocked;
+    this.updateTaskbarDockUI(target);
     if (window.electronAPI) {
       window.electronAPI.toggleTaskbarDock(target);
-    } else {
-      this.updateTaskbarDockUI(target);
     }
   }
 

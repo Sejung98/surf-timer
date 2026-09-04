@@ -1,6 +1,17 @@
 const { app, BrowserWindow, ipcMain, screen, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 
+const windows = new Set();
+let tray = null;
+let windowCounter = 0;
+
+// 윈도우 표준 크기 및 모드별 크기 정의
+const SIZES = {
+  normal: { width: 390, height: 245 },
+  compact: { width: 170, height: 48 },
+  taskbar: { width: 190, height: 44 }
+};
+
 // 1. 단일 인스턴스 락 (Single Instance Lock)
 // 사용자가 바탕화면 아이콘을 다시 누를 때 새 프로세스가 중복 실행되지 않고 기존 창을 복원 및 포커스
 const gotTheLock = app.requestSingleInstanceLock();
@@ -9,6 +20,10 @@ if (!gotTheLock) {
   app.quit();
 } else {
   app.on('second-instance', () => {
+    if (windows.size === 0) {
+      createWindow();
+      return;
+    }
     // 기존 창이 작업표시줄에 도킹되어 있거나 최소화되어 있다면 즉시 원래 크기로 복원하고 맨 앞으로 표시
     for (const win of windows) {
       if (win.isDestroyed()) continue;
@@ -23,17 +38,6 @@ if (!gotTheLock) {
 
   initApp();
 }
-
-const windows = new Set();
-let tray = null;
-let windowCounter = 0;
-
-// 윈도우 표준 크기 및 모드별 크기 정의
-const SIZES = {
-  normal: { width: 390, height: 245 },
-  compact: { width: 170, height: 48 },
-  taskbar: { width: 190, height: 44 }
-};
 
 function initApp() {
   app.whenReady().then(() => {
