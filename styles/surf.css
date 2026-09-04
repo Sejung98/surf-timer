@@ -228,6 +228,16 @@ body {
   color: var(--surf-accent);
 }
 
+.surf-icon-btn.muted {
+  opacity: 0.55;
+  color: var(--surf-text-muted);
+}
+
+.surf-icon-btn.muted:hover {
+  opacity: 0.95;
+  color: var(--surf-text-primary);
+}
+
 .surf-icon-btn svg {
   width: 14px;
   height: 14px;

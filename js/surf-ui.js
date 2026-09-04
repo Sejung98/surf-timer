@@ -9,7 +9,7 @@ class SurfUIController {
     this.sound = sound;
 
     this.isCompact = false;
-    this.isPinned = true;
+    this.isPinned = (this.storage.settings.isPinned !== undefined) ? this.storage.settings.isPinned : true;
     this.isTaskbarDocked = false;
 
     this.initDOMElements();
@@ -17,6 +17,9 @@ class SurfUIController {
     this.initSettingsValues();
     this.applyTheme();
     this.renderDailyDots();
+
+    // 시작 시 저장된 설정 기반으로 타이머 및 디스플레이 즉시 동기화
+    this.syncInitialState();
   }
 
   initDOMElements() {
@@ -24,6 +27,9 @@ class SurfUIController {
       card: document.getElementById('surf-card'),
       btnPin: document.getElementById('btn-pin'),
       btnCompact: document.getElementById('btn-compact'),
+      btnSoundToggle: document.getElementById('btn-sound-toggle'),
+      iconSoundOn: document.getElementById('icon-sound-on'),
+      iconSoundMute: document.getElementById('icon-sound-mute'),
       btnSettings: document.getElementById('btn-settings'),
       btnClose: document.getElementById('btn-close'),
 
@@ -217,6 +223,23 @@ class SurfUIController {
         window.electronAPI.closeWindow();
       }
     });
+
+    // 헤더 빠른 소리 켜기/끄기 토글
+    if (this.dom.btnSoundToggle) {
+      this.dom.btnSoundToggle.addEventListener('click', () => {
+        const currentEnabled = this.storage.settings.soundEnabled !== false;
+        const nextEnabled = !currentEnabled;
+        this.storage.saveSettings({ soundEnabled: nextEnabled });
+        this.sound.setEnabled(nextEnabled);
+        if (nextEnabled) {
+          this.sound.playClick();
+        }
+        this.updateSoundButtonUI(nextEnabled);
+        if (this.dom.toggleSound) {
+          this.dom.toggleSound.checked = nextEnabled;
+        }
+      });
+    }
 
     // 6. 설정 창 열기/닫기
     this.dom.btnSettings.addEventListener('click', () => {
@@ -537,6 +560,7 @@ class SurfUIController {
       const enabled = e.target.checked;
       this.storage.saveSettings({ soundEnabled: enabled });
       this.sound.setEnabled(enabled);
+      this.updateSoundButtonUI(enabled);
     });
 
     this.dom.sliderSoundVolume.addEventListener('input', (e) => {
@@ -556,6 +580,42 @@ class SurfUIController {
         this.applyTheme();
       });
     });
+  }
+
+  syncInitialState() {
+    // 1. 사운드 엔진 및 헤더 사운드 버튼 동기화
+    if (this.sound && this.sound.initFromSettings) {
+      this.sound.initFromSettings(this.storage.settings);
+    }
+    this.updateSoundButtonUI(this.storage.settings.soundEnabled !== false);
+
+    // 2. 타이머 모드 동기화 (저장된 lastMode가 있으면 복원)
+    if (this.storage.settings.lastMode && ['focus', 'shortBreak', 'longBreak'].includes(this.storage.settings.lastMode)) {
+      this.timer.mode = this.storage.settings.lastMode;
+    }
+
+    // 3. 타이머 시간 설정 동기화
+    this.timer.syncFromSettings();
+
+    // 4. 화면 디스플레이(메인 텍스트, 컴팩트, 도킹) 즉시 업데이트
+    this.handleTimerTick({ remainingSeconds: this.timer.remainingSeconds });
+    this.handleTimerStateChange({ mode: this.timer.mode, state: this.timer.state });
+    this.updatePinUI(this.isPinned);
+  }
+
+  updateSoundButtonUI(enabled) {
+    if (!this.dom.btnSoundToggle) return;
+    if (enabled) {
+      this.dom.btnSoundToggle.classList.remove('muted');
+      this.dom.btnSoundToggle.title = 'Sound On (Click to Mute)';
+      if (this.dom.iconSoundOn) this.dom.iconSoundOn.classList.remove('hidden');
+      if (this.dom.iconSoundMute) this.dom.iconSoundMute.classList.add('hidden');
+    } else {
+      this.dom.btnSoundToggle.classList.add('muted');
+      this.dom.btnSoundToggle.title = 'Sound Muted (Click to Unmute)';
+      if (this.dom.iconSoundOn) this.dom.iconSoundOn.classList.add('hidden');
+      if (this.dom.iconSoundMute) this.dom.iconSoundMute.classList.remove('hidden');
+    }
   }
 
   updateFocusTime(mins) {

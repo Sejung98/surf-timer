@@ -18,8 +18,10 @@ const DEFAULT_SETTINGS = {
   autoStartFocus: false, // 휴식 끝나면 자동으로 다음 집중 시작
   soundEnabled: true,    // 사운드 알림 켜기
   soundVolume: 70,       // 볼륨 (0~100)
-  theme: 'dark',         // 'dark' | 'light'
-  accentColor: 'blue'    // 'blue' | 'amber' | 'emerald' | 'rose' | 'purple'
+  theme: 'light',        // 'light' | 'dark'
+  accentColor: 'blue',   // 'blue' | 'amber' | 'emerald' | 'rose' | 'purple'
+  isPinned: true,        // 항상 위에 고정
+  lastMode: 'focus'      // 마지막 모드 ('focus' | 'shortBreak' | 'longBreak')
 };
 
 class StorageManager {
@@ -37,15 +39,20 @@ class StorageManager {
   }
 
   loadSettings() {
+    let persistentData = {};
+    if (window.electronAPI && window.electronAPI.initialSettings) {
+      persistentData = window.electronAPI.initialSettings;
+    }
+    let localData = {};
     try {
       const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
       if (data) {
-        return { ...DEFAULT_SETTINGS, ...JSON.parse(data) };
+        localData = JSON.parse(data);
       }
     } catch (e) {
       console.warn('Failed to load settings from localStorage:', e);
     }
-    return { ...DEFAULT_SETTINGS };
+    return { ...DEFAULT_SETTINGS, ...localData, ...persistentData };
   }
 
   saveSettings(newSettings) {
@@ -53,20 +60,29 @@ class StorageManager {
     try {
       localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(this.settings));
     } catch (e) {
-      console.error('Failed to save settings:', e);
+      console.error('Failed to save settings to localStorage:', e);
+    }
+    if (window.electronAPI && window.electronAPI.savePersistentSettings) {
+      window.electronAPI.savePersistentSettings(this.settings);
     }
     return this.settings;
   }
 
   getDailyStats() {
+    let persistentStats = null;
+    if (window.electronAPI && window.electronAPI.initialSettings && window.electronAPI.initialSettings.dailyStats) {
+      persistentStats = window.electronAPI.initialSettings.dailyStats;
+    }
     try {
       const data = localStorage.getItem(STORAGE_KEYS.DAILY_STATS);
       if (data) {
-        return JSON.parse(data);
+        const parsed = JSON.parse(data);
+        return { ...parsed, ...(persistentStats || {}) };
       }
     } catch (e) {
       console.warn('Failed to parse daily stats:', e);
     }
+    if (persistentStats) return persistentStats;
     return {
       date: this.getTodayDateString(),
       completedCycles: 0,
@@ -95,6 +111,9 @@ class StorageManager {
       localStorage.setItem(STORAGE_KEYS.DAILY_STATS, JSON.stringify(stats));
     } catch (e) {
       console.error('Failed to save daily stats:', e);
+    }
+    if (window.electronAPI && window.electronAPI.savePersistentSettings) {
+      window.electronAPI.savePersistentSettings({ dailyStats: stats });
     }
   }
 

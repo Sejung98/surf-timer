@@ -1,6 +1,16 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+let initialSettings = {};
+try {
+  initialSettings = ipcRenderer.sendSync('get-persistent-settings-sync') || {};
+} catch (e) {
+  console.warn('Failed to load initialSettings sync:', e);
+}
+
 contextBridge.exposeInMainWorld('electronAPI', {
+  initialSettings,
+  loadPersistentSettings: () => ipcRenderer.invoke('load-persistent-settings'),
+  savePersistentSettings: (settings) => ipcRenderer.invoke('save-persistent-settings', settings),
   minimizeWindow: () => ipcRenderer.send('window-minimize'),
   closeWindow: () => ipcRenderer.send('window-close'),
   togglePin: (forceValue) => ipcRenderer.send('toggle-pin', forceValue),

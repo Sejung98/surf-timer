@@ -8,7 +8,8 @@ class PomodoroTimer {
     this.storage = storage;
     this.sound = sound;
 
-    this.mode = 'focus'; // 'focus' | 'shortBreak' | 'longBreak'
+    const initialMode = (storage && storage.settings && storage.settings.lastMode) || 'focus';
+    this.mode = ['focus', 'shortBreak', 'longBreak'].includes(initialMode) ? initialMode : 'focus';
     this.state = 'idle'; // 'idle' | 'running' | 'paused'
     
     this.totalSeconds = 25 * 60;
@@ -187,6 +188,10 @@ class PomodoroTimer {
     this.pause();
     this.mode = mode;
     this.state = 'idle';
+
+    if (this.storage && this.storage.saveSettings) {
+      this.storage.saveSettings({ lastMode: mode });
+    }
 
     const settings = this.storage.settings;
     if (mode === 'focus') {

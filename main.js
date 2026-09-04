@@ -1,5 +1,8 @@
 const { app, BrowserWindow, ipcMain, screen, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
+const fs = require('fs');
+
+app.name = 'surf-timer';
 
 const windows = new Set();
 let tray = null;
@@ -11,6 +14,41 @@ const SIZES = {
   compact: { width: 170, height: 48 },
   taskbar: { width: 190, height: 44 }
 };
+
+// 파일 기반 영구 설정 저장소 관리 (%APPDATA%/surf-timer/surf-settings.json)
+function getSettingsFilePath() {
+  return path.join(app.getPath('userData'), 'surf-settings.json');
+}
+
+function loadConfigFile() {
+  try {
+    const p = getSettingsFilePath();
+    if (fs.existsSync(p)) {
+      const data = fs.readFileSync(p, 'utf-8');
+      return JSON.parse(data);
+    }
+  } catch (err) {
+    console.warn('Failed to load surf-settings.json:', err);
+  }
+  return {};
+}
+
+function saveConfigFile(newData) {
+  try {
+    const p = getSettingsFilePath();
+    const dir = path.dirname(p);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    const current = loadConfigFile();
+    const merged = { ...current, ...newData };
+    fs.writeFileSync(p, JSON.stringify(merged, null, 2), 'utf-8');
+    return merged;
+  } catch (err) {
+    console.error('Failed to save surf-settings.json:', err);
+  }
+  return null;
+}
 
 // 1. 단일 인스턴스 락 (Single Instance Lock)
 // 사용자가 바탕화면 아이콘을 다시 누를 때 새 프로세스가 중복 실행되지 않고 기존 창을 복원 및 포커스
@@ -59,15 +97,33 @@ function initApp() {
 function createWindow() {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+  const config = loadConfigFile();
 
   // 새 창을 띄울 때 이전 창과 살짝 겹치지 않게 오프셋 적용
   const offset = (windowCounter % 8) * 32;
   windowCounter++;
 
-  const defaultX = Math.max(50, screenWidth - SIZES.normal.width - 24 - offset);
-  const defaultY = Math.min(screenHeight - SIZES.normal.height - 50, 48 + offset);
+  let defaultX = Math.max(50, screenWidth - SIZES.normal.width - 24 - offset);
+  let defaultY = Math.min(screenHeight - SIZES.normal.height - 50, 48 + offset);
+
+  // 첫 번째 창이고 이전에 저장된 위치가 있다면 화면 내 유효성 검증 후 복원
+  if (windows.size === 0 && config.windowPosition && typeof config.windowPosition.x === 'number') {
+    const savedX = config.windowPosition.x;
+    const savedY = config.windowPosition.y;
+    const allDisplays = screen.getAllDisplays();
+    const isVisible = allDisplays.some(d => {
+      const b = d.bounds;
+      return savedX >= b.x - 50 && savedX <= b.x + b.width - 100 &&
+             savedY >= b.y - 30 && savedY <= b.y + b.height - 50;
+    });
+    if (isVisible) {
+      defaultX = savedX;
+      defaultY = savedY;
+    }
+  }
 
   const iconIco = path.join(__dirname, 'assets', 'icon.ico');
+  const isPinned = (config.isPinned !== undefined) ? config.isPinned : true;
 
   const win = new BrowserWindow({
     width: SIZES.normal.width,
@@ -76,7 +132,7 @@ function createWindow() {
     y: defaultY,
     frame: false,
     transparent: true,
-    alwaysOnTop: true,
+    alwaysOnTop: isPinned,
     resizable: false,
     maximizable: false,
     fullscreenable: false,
@@ -93,12 +149,25 @@ function createWindow() {
   });
 
   // 창별 개별 상태 저장
-  win._isPinned = true;
+  win._isPinned = isPinned;
   win._isCompact = false;
   win._isTaskbarDocked = false;
   win._savedNormalBounds = null;
 
   windows.add(win);
+
+  // 사용자가 일반 모드에서 창을 드래그하여 이동했을 때 새 좌표 영구 저장
+  let moveTimeout = null;
+  win.on('moved', () => {
+    if (win._isTaskbarDocked || win._isCompact) return;
+    clearTimeout(moveTimeout);
+    moveTimeout = setTimeout(() => {
+      if (!win.isDestroyed()) {
+        const bounds = win.getBounds();
+        saveConfigFile({ windowPosition: { x: bounds.x, y: bounds.y } });
+      }
+    }, 400);
+  });
 
   win.loadFile('index.html');
 
@@ -221,6 +290,7 @@ ipcMain.on('toggle-pin', (event, forceValue) => {
   if (win) {
     win._isPinned = typeof forceValue === 'boolean' ? forceValue : !win._isPinned;
     win.setAlwaysOnTop(win._isPinned);
+    saveConfigFile({ isPinned: win._isPinned });
     event.reply('pin-status-changed', win._isPinned);
   }
 });
@@ -273,3 +343,17 @@ ipcMain.handle('get-window-state', (event) => {
   }
   return { isPinned: true, isCompact: false, isTaskbarDocked: false };
 });
+
+// 영구 설정 IPC 핸들러 (동기 초기 로딩 및 비동기 저장/조회)
+ipcMain.on('get-persistent-settings-sync', (event) => {
+  event.returnValue = loadConfigFile();
+});
+
+ipcMain.handle('load-persistent-settings', () => {
+  return loadConfigFile();
+});
+
+ipcMain.handle('save-persistent-settings', (_event, settings) => {
+  return saveConfigFile(settings);
+});
+

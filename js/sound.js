@@ -28,6 +28,17 @@ class SoundEngine {
     this.enabled = enabled;
   }
 
+  initFromSettings(settings) {
+    if (settings) {
+      if (typeof settings.soundEnabled === 'boolean') {
+        this.enabled = settings.soundEnabled;
+      }
+      if (typeof settings.soundVolume === 'number') {
+        this.volume = Math.max(0, Math.min(1, settings.soundVolume / 100));
+      }
+    }
+  }
+
   /**
    * 벨/차임 단일 톤 합성 (기본음 + 하모닉스 오버톤으로 풍부한 울림 형성)
    */
