@@ -340,6 +340,7 @@ class SurfUIController {
     }
   }
 
+  setupSettingsInputListeners() {
     // Focus Steppers (-5m, +5m)
     const btnDecFocus = document.getElementById('btn-dec-focus');
     const btnIncFocus = document.getElementById('btn-inc-focus');
