@@ -1,89 +1,62 @@
 # Surf Timer
 
-A minimalist focus and Pomodoro desktop timer widget for Windows, inspired by modern Nordic application aesthetics.
+A desktop focus timer and Pomodoro widget for Windows.
 
 ---
 
 ## Why I Built This
 
-While conducting academic research, I constantly found myself in need of a distraction-free, elegant timer to maintain deep focus during long study and writing sessions. Existing tools were often cluttered, distracting, or occupied too much valuable screen estate. I built Surf Timer to serve as a lightweight, beautiful companion that stays quietly on the desktop.
+I built this timer while doing research because I needed a simple, distraction-free tool to stay focused during long study and writing sessions.
+
+To fellow students and researchers: please feel free to use it for your work and studies. I hope it helps everyone do great research.
 
 ---
 
-## For Students and Researchers
+## Features
 
-To all fellow students, researchers, and lifelong learners: please feel free to use Surf Timer freely in your daily work, experiments, and studies. May this small tool bring clarity to your deep work, calm to your breaks, and great success to everyone's research journeys.
+### Timer & Sessions
+- **Focus & Break Cycles**: Supports focus sessions, short breaks, and long breaks.
+- **Adjustable Durations**: Configure focus time (5-90 min), short break (1-30 min), and long break (5-45 min) via sliders or quick +/- stepper buttons.
+- **Quick Controls**: Play/pause, skip session, or add +5 minutes with one click.
+- **Auto-Start Options**: Optionally auto-start break and focus sessions when a timer finishes.
 
----
+### Display Modes
+- **Normal Widget**: Compact card on your desktop with live countdown and progress dots.
+- **Taskbar Dock**: Dock the timer directly into the bottom-left corner of the Windows taskbar so you can always see the running time while working in full screen.
+- **Compact Pill Mode**: Collapse the timer into a minimal floating bar.
+- **Always on Top**: Pin the widget so it stays visible over other windows.
 
-## Key Features
+### Daily Progress
+- **Cycle Indicator**: Displays completed daily focus cycles as dots below the timer.
+- **Reset**: Click the cycle dots or the reset icon in the header to reset today's count.
 
-### Clean Horizontal Layout
-- Optimized wide horizontal aspect ratio (390 x 245 px) that occupies minimal screen estate.
-- Clear 58px typography for effortless glanceability.
-- Seamless frosted glassmorphism with delicate borders and soft shadows in both light and dark themes.
-
-### Focus and Break Cycles
-- Focus Session (Surf): Default 25 minutes (adjustable from 5 to 90 minutes, with quick presets for 15m, 25m, 45m, 50m, and 60m).
-- Short Break: Default 5 minutes (adjustable from 1 to 30 minutes, with quick presets for 3m, 5m, 10m, and 15m).
-- Long Break: Default 15 minutes, configurable interval (default every 4 completed cycles).
-- Precision Stepper Controls: Instant plus and minus stepper buttons for quick fine-tuning alongside smooth sliders.
-- Optional automatic transitions for breaks and subsequent focus sessions.
-- Session extension (+5m) and instant skip controls.
-
-### Daily Session Dot Indicator and Reset
-- Completed cycles are rendered directly beneath the timer display as pill-shaped indicator dots.
-- Active sessions pulse gently to indicate ongoing progress.
-- Flexible one-click reset: Click the counter dots or the reset icon in the top header to reset today's completed cycle count at any time.
-
-### Desktop Widget Controls
-- Always on Top: Pin the widget to keep it visible above code editors, PDF readers, and reference materials.
-- Taskbar Dock Mode: Dock the timer into a sleek 180 x 38 px capsule positioned at the bottom-left corner of the Windows taskbar, allowing real-time countdown monitoring right on the taskbar.
-- Compact Menu Bar Mode: Collapse the widget into a slim pill (170 x 48 px) that fits neatly into any screen corner.
-- Free Dragging: Grab anywhere on the header or card background to move the widget across multiple displays.
-- System Tray Integration: Minimize to the Windows system tray and manage visibility seamlessly.
-
-### Pure Synthesized Zen Chimes
-- Built-in Web Audio API harmonic sound generator replicating tranquil singing bowl and marimba tones.
-- No external audio assets or downloads required; plays instantaneously.
+### Sound & Themes
+- **Sound Alerts**: Plays an audio chime when sessions finish (volume and on/off toggle available).
+- **Themes**: Light and Dark theme support.
 
 ---
 
-## Getting Started
+## How to Run
 
-### Prerequisites
-- Windows 10 / 11
-- Node.js (v18 or higher recommended)
+### Quick Start
+- Double-click `Surf Timer.lnk` on the Desktop.
+- Or double-click `run-widget.vbs` in the project folder to start without a terminal window.
 
-### Quick Launch
-- Double-click `Surf Timer.lnk` on your Desktop.
-- Or double-click `run-widget.vbs` inside the project folder to run silently without an open console window.
-- Or double-click `start-timer.bat`.
-
-### Command Line
+### Terminal
 ```bash
-# Navigate to the directory
-cd timer
-
-# Install dependencies (first time only)
 npm install
-
-# Start the desktop widget
 npm start
 ```
 
-### Browser Access
-If you prefer running inside a web browser, open `index.html` directly in any modern browser. All timer logic, settings, and audio synthesis function identically without Electron dependencies.
-
 ---
 
-## Keyboard Shortcuts
+## Shortcuts
 
-- `Space`: Start or pause the current session.
-- `Esc`: Close the preferences modal.
+- `Space`: Start / Pause
+- `Esc`: Close settings
 
 ---
 
 ## License
 
-MIT License. Completely open source and free for all students, researchers, and creators to use, adapt, and share.
+MIT License. Open source for all students and researchers.
