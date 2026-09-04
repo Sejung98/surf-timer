@@ -1,0 +1,672 @@
+/* ==========================================================================
+   surf.css - Surf Timer Minimalist Horizontal Widget Stylesheet
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Surf 시그니처 라이트 모드 (은은한 반투명 글래스) */
+  --surf-bg: rgba(255, 255, 255, 0.80);
+  --surf-bg-settings: rgba(255, 255, 255, 0.94);
+  --surf-border: rgba(255, 255, 255, 0.65);
+  --surf-shadow: 0 16px 36px rgba(0, 0, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  --surf-blur: blur(24px);
+
+  --surf-text-primary: #191c1f;
+  --surf-text-secondary: #5f6c7b;
+  --surf-text-muted: #8c97a3;
+
+  --surf-accent: #2d6a4f;
+  --surf-accent-bg: rgba(45, 106, 79, 0.12);
+  --surf-accent-hover: #1b4d3e;
+
+  --dot-completed: #2d6a4f;
+  --dot-empty: rgba(0, 0, 0, 0.12);
+
+  --card-width: 390px;
+  --card-height: 245px;
+}
+
+/* Surf 다크 모드 (은은한 반투명 글래스) */
+[data-theme="dark"] {
+  --surf-bg: rgba(24, 27, 30, 0.78);
+  --surf-bg-settings: rgba(24, 27, 30, 0.94);
+  --surf-border: rgba(255, 255, 255, 0.12);
+  --surf-shadow: 0 20px 45px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  --surf-blur: blur(24px);
+
+  --surf-text-primary: #f8fafc;
+  --surf-text-secondary: #94a3b8;
+  --surf-text-muted: #64748b;
+
+  --surf-accent: #52b788;
+  --surf-accent-bg: rgba(82, 183, 136, 0.16);
+  --surf-accent-hover: #74c69d;
+
+  --dot-completed: #52b788;
+  --dot-empty: rgba(255, 255, 255, 0.18);
+}
+
+/* 휴식 모드 액센트 */
+[data-mode="shortBreak"] {
+  --surf-accent: #3b82f6;
+  --surf-accent-bg: rgba(59, 130, 246, 0.14);
+}
+[data-theme="dark"][data-mode="shortBreak"] {
+  --surf-accent: #60a5fa;
+  --surf-accent-bg: rgba(96, 165, 250, 0.16);
+}
+
+[data-mode="longBreak"] {
+  --surf-accent: #8b5cf6;
+  --surf-accent-bg: rgba(139, 92, 246, 0.14);
+}
+[data-theme="dark"][data-mode="longBreak"] {
+  --surf-accent: #a78bfa;
+  --surf-accent-bg: rgba(167, 139, 250, 0.16);
+}
+
+/* 기본 리셋 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: transparent;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Surf 메인 카드 (가로는 길고 세로는 짧은 직사각형 카드) */
+.surf-card {
+  width: var(--card-width);
+  height: var(--card-height);
+  background: var(--surf-bg);
+  backdrop-filter: var(--surf-blur);
+  -webkit-backdrop-filter: var(--surf-blur);
+  border: 1px solid var(--surf-border);
+  border-radius: 22px;
+  box-shadow: var(--surf-shadow);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+              height 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-radius 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.25s ease;
+}
+
+/* 1. 상단 헤더 */
+.surf-header {
+  height: 40px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  -webkit-app-region: drag; /* 윈도우 창 이동 */
+}
+
+.header-left, .header-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  -webkit-app-region: no-drag;
+}
+
+.header-center {
+  position: relative;
+  -webkit-app-region: no-drag;
+}
+
+/* 세션 타이틀 & 드롭다운 */
+.session-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.session-dropdown-trigger:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+[data-theme="dark"] .session-dropdown-trigger:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.session-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--surf-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.dropdown-chevron {
+  width: 12px;
+  height: 12px;
+  fill: var(--surf-text-muted);
+}
+
+/* 세션 모드 빠른 선택 팝오버 */
+.session-popover {
+  position: absolute;
+  top: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surf-bg);
+  border: 1px solid var(--surf-border);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  padding: 4px;
+  width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 50;
+}
+
+.popover-item {
+  border: none;
+  background: transparent;
+  padding: 6px 10px;
+  text-align: left;
+  font-size: 12px;
+  color: var(--surf-text-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.popover-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--surf-text-primary);
+}
+
+.popover-item.active {
+  background: var(--surf-accent-bg);
+  color: var(--surf-accent);
+  font-weight: 600;
+}
+
+/* 상단 아이콘 버튼들 */
+.surf-icon-btn {
+  border: none;
+  background: transparent;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--surf-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.surf-icon-btn:hover {
+  color: var(--surf-text-primary);
+  background: rgba(0, 0, 0, 0.04);
+}
+[data-theme="dark"] .surf-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.surf-icon-btn.pinned {
+  color: var(--surf-accent);
+}
+
+.surf-icon-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.surf-icon-btn.btn-close-app:hover {
+  color: #e11d48;
+}
+
+/* 2. 위젯 본문 */
+.surf-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 12px;
+  -webkit-app-region: drag; /* 빈 공간 드래그 */
+}
+
+/* 메인 타이머 텍스트 */
+.surf-timer-wrapper {
+  margin-top: -6px;
+  margin-bottom: 6px;
+}
+
+.surf-timer-text {
+  font-family: 'Outfit', 'Inter', -apple-system, sans-serif;
+  font-size: 58px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--surf-text-primary);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  cursor: default;
+}
+
+/* 세션 도트들 (타이머 바로 아래) */
+.surf-dots-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 999px;
+  transition: background 0.15s ease;
+  -webkit-app-region: no-drag;
+}
+
+.surf-dots-wrapper:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+[data-theme="dark"] .surf-dots-wrapper:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* 개별 도트 */
+.surf-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dot-empty);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 완료된 도트 (가로 알약형태) */
+.surf-dot.completed {
+  width: 14px;
+  border-radius: 999px;
+  background: var(--dot-completed);
+}
+
+/* 진행 중 도트 */
+.surf-dot.in-progress {
+  background: var(--surf-accent);
+  animation: surfDotBlink 1.6s infinite ease-in-out;
+}
+
+@keyframes surfDotBlink {
+  0%, 100% { opacity: 0.35; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+/* 하단 컨트롤 바 */
+.surf-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  -webkit-app-region: no-drag;
+}
+
+/* 중앙 Hero Play/Pause 버튼 */
+.surf-hero-play-btn {
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surf-accent-bg);
+  color: var(--surf-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background 0.15s ease;
+}
+
+.surf-hero-play-btn:hover {
+  transform: scale(1.08);
+  background: var(--surf-accent);
+  color: #ffffff;
+}
+
+.surf-hero-play-btn:active {
+  transform: scale(0.94);
+}
+
+.surf-hero-play-btn svg {
+  width: 17px;
+  height: 17px;
+  fill: currentColor;
+}
+
+/* 보조 사이드 버튼 (+5m, Skip) */
+.surf-side-btn {
+  border: none;
+  background: transparent;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--surf-text-muted);
+  cursor: pointer;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.surf-side-btn:hover {
+  color: var(--surf-text-primary);
+  background: rgba(0, 0, 0, 0.04);
+}
+[data-theme="dark"] .surf-side-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.surf-side-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+/* 3. 컴팩트 메뉴바 캡슐 모드 */
+.surf-compact-view {
+  display: none;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  -webkit-app-region: drag;
+}
+
+.surf-card.compact-mode {
+  width: 170px;
+  height: 48px;
+  border-radius: 999px;
+}
+
+.surf-card.compact-mode .surf-header,
+.surf-card.compact-mode .surf-body {
+  display: none;
+}
+
+.surf-card.compact-mode .surf-compact-view {
+  display: flex;
+}
+
+.compact-pill-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 10px;
+}
+
+.compact-mini-play {
+  border: none;
+  background: var(--surf-accent-bg);
+  color: var(--surf-accent);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+.compact-mini-play svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+.compact-time-text {
+  font-family: 'Outfit', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--surf-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.compact-mini-expand {
+  border: none;
+  background: transparent;
+  color: var(--surf-text-muted);
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+.compact-mini-expand:hover {
+  color: var(--surf-text-primary);
+}
+
+.compact-mini-expand svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* 4. 설정 오버레이 모달 */
+.surf-settings-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--surf-bg-settings);
+  backdrop-filter: var(--surf-blur);
+  -webkit-backdrop-filter: var(--surf-blur);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+}
+
+.settings-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--surf-border);
+  -webkit-app-region: drag;
+}
+
+.settings-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--surf-text-primary);
+}
+
+.settings-content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-content-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.settings-content-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+.pref-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--surf-border);
+}
+
+.pref-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pref-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--surf-text-primary);
+}
+
+.pref-sub-label {
+  font-size: 11.5px;
+  color: var(--surf-text-secondary);
+}
+
+.pref-val {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--surf-accent);
+}
+
+.pref-presets {
+  display: flex;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.preset-pill {
+  border: 1px solid var(--surf-border);
+  background: transparent;
+  color: var(--surf-text-secondary);
+  font-size: 10.5px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.preset-pill:hover {
+  border-color: var(--surf-accent);
+  color: var(--surf-accent);
+}
+
+/* 슬라이더 */
+input[type="range"] {
+  width: 100%;
+  height: 3px;
+  background: var(--surf-border);
+  outline: none;
+  -webkit-appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--surf-accent);
+  cursor: pointer;
+}
+
+/* 스위치 */
+.surf-switch {
+  position: relative;
+  display: inline-block;
+  width: 32px;
+  height: 18px;
+}
+
+.surf-switch input { opacity: 0; width: 0; height: 0; }
+
+.surf-switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--dot-empty);
+  transition: .2s;
+  border-radius: 18px;
+}
+
+.surf-switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 14px; width: 14px;
+  left: 2px; bottom: 2px;
+  background-color: white;
+  transition: .2s;
+  border-radius: 50%;
+}
+
+input:checked + .surf-switch-slider {
+  background-color: var(--surf-accent);
+}
+
+input:checked + .surf-switch-slider:before {
+  transform: translateX(14px);
+}
+
+/* 테마 스위치 그룹 */
+.theme-switch-group {
+  display: flex;
+  gap: 6px;
+}
+
+.theme-pill-opt {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  font-size: 11.5px;
+  border-radius: 6px;
+  border: 1px solid var(--surf-border);
+  color: var(--surf-text-secondary);
+  cursor: pointer;
+}
+
+.theme-pill-opt input { display: none; }
+
+.theme-pill-opt:has(input:checked) {
+  background: var(--surf-accent-bg);
+  border-color: var(--surf-accent);
+  color: var(--surf-accent);
+  font-weight: 600;
+}
+
+.btn-pref-reset {
+  border: 1px solid rgba(225, 29, 72, 0.3);
+  background: rgba(225, 29, 72, 0.08);
+  color: #e11d48;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.btn-pref-reset:hover {
+  background: rgba(225, 29, 72, 0.15);
+}
+
+.hidden {
+  display: none !important;
+}

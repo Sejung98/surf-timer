@@ -1,0 +1,22 @@
+{
+  "name": "surf-timer",
+  "version": "1.0.0",
+  "description": "Surf Timer - Minimalist Focus and Pomodoro Widget for Windows",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron ."
+  },
+  "keywords": [
+    "pomodoro",
+    "timer",
+    "surf",
+    "widget",
+    "electron"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.2.1"
+  }
+}

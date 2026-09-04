@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light" data-accent="green">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com data:;">
+  <title>Surf Timer</title>
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="styles/surf.css">
+</head>
+<body>
+
+  <!-- 메인 위젯 카드 (가로는 길고 세로는 짧은 Surf 직사각형 카드) -->
+  <div id="surf-card" class="surf-card" data-mode="focus">
+    
+    <!-- 1. 위젯 상단 헤더 -->
+    <header class="surf-header">
+      <!-- 좌측: 위젯 모드 제어 (고정 핀 & 캡슐 모드) -->
+      <div class="header-left">
+        <button id="btn-pin" class="surf-icon-btn pinned" title="Always on Top (Pin)">
+          <svg viewBox="0 0 24 24">
+            <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
+          </svg>
+        </button>
+        <button id="btn-compact" class="surf-icon-btn" title="Compact Pill Mode">
+          <svg viewBox="0 0 24 24">
+            <rect x="3" y="7" width="18" height="10" rx="5" stroke="currentColor" stroke-width="2" fill="none"/>
+            <circle cx="8" cy="12" r="2" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 중앙: Surf 세션 타이틀 (클릭 시 모드 전환 드롭다운) -->
+      <div class="header-center">
+        <div class="session-dropdown-trigger" id="session-title-trigger">
+          <span id="session-label" class="session-label">Surf</span>
+          <svg class="dropdown-chevron" viewBox="0 0 24 24">
+            <path d="M7 10l5 5 5-5z"/>
+          </svg>
+        </div>
+
+        <!-- 모드 빠른 선택 팝오버 메뉴 -->
+        <div class="session-popover hidden" id="session-popover">
+          <button class="popover-item active" data-mode="focus">Surf (Focus)</button>
+          <button class="popover-item" data-mode="shortBreak">Break (Short Break)</button>
+          <button class="popover-item" data-mode="longBreak">Long Break</button>
+        </div>
+      </div>
+
+      <!-- 우측: 액션 아이콘들 (세션 리셋, 오늘 통계/리셋, 설정, 닫기) -->
+      <div class="header-right">
+        <!-- 현재 타이머 다시 시작 -->
+        <button id="btn-reset-session" class="surf-icon-btn" title="Reset Current Timer">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6 0 2.97-2.16 5.44-5 5.92v2.02c3.95-.49 7-3.85 7-7.94 0-4.42-3.58-8-8-8z"/>
+          </svg>
+        </button>
+
+        <!-- 오늘 사이클 통계 & 리셋 버튼 -->
+        <button id="btn-reset-daily" class="surf-icon-btn" title="Reset Today's Surf Cycles">
+          <svg viewBox="0 0 24 24">
+            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+          </svg>
+        </button>
+
+        <!-- 설정 아이콘 (더보기 ⋮) -->
+        <button id="btn-settings" class="surf-icon-btn" title="Settings">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="5" r="1.8"/>
+            <circle cx="12" cy="12" r="1.8"/>
+            <circle cx="12" cy="19" r="1.8"/>
+          </svg>
+        </button>
+
+        <!-- 닫기 아이콘 -->
+        <button id="btn-close" class="surf-icon-btn btn-close-app" title="Close">
+          <svg viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- 2. 위젯 본문 (대형 시간 표시, 도트, 플레이 버튼) -->
+    <main class="surf-body" id="main-view">
+      <!-- 메인 카운트다운 타이머 숫자 -->
+      <div class="surf-timer-wrapper">
+        <time id="timer-display" class="surf-timer-text">25:00</time>
+      </div>
+
+      <!-- 세션 진행 도트 (작은 원들) -->
+      <div class="surf-dots-wrapper" id="cycle-dots-container" title="Today's Surf Cycles (Click to reset)">
+        <!-- JS에서 완료/미완료 도트 동적 생성 -->
+      </div>
+
+      <!-- 하단 미니멀 컨트롤 바 -->
+      <div class="surf-controls-row">
+        <!-- +5분 추가 -->
+        <button id="btn-add-time" class="surf-side-btn" title="+5 Minutes">
+          <span>+5m</span>
+        </button>
+
+        <!-- 중앙 Hero Play/Pause 버튼 -->
+        <button id="btn-play-pause" class="surf-hero-play-btn" title="Start / Pause">
+          <svg id="icon-play" class="icon-play" viewBox="0 0 24 24">
+            <polygon points="7,4 19,12 7,20"/>
+          </svg>
+          <svg id="icon-pause" class="icon-pause hidden" viewBox="0 0 24 24">
+            <rect x="6" y="5" width="4" height="14" rx="1.5"/>
+            <rect x="14" y="5" width="4" height="14" rx="1.5"/>
+          </svg>
+        </button>
+
+        <!-- 다음 건너뛰기 (Skip) -->
+        <button id="btn-skip" class="surf-side-btn" title="Skip to Next Session">
+          <svg viewBox="0 0 24 24">
+            <polygon points="5 5 15 12 5 19"/>
+            <line x1="18" y1="5" x2="18" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </main>
+
+    <!-- 3. 초소형 캡슐 메뉴바 모드 -->
+    <div id="compact-view" class="surf-compact-view">
+      <div class="compact-pill-body">
+        <button id="compact-btn-play" class="compact-mini-play">
+          <svg viewBox="0 0 24 24">
+            <polygon points="8,5 18,12 8,19"/>
+          </svg>
+        </button>
+        <span id="compact-time" class="compact-time-text">25:00</span>
+        <button id="compact-btn-expand" class="compact-mini-expand" title="Expand Window">
+          <svg viewBox="0 0 24 24">
+            <path d="M15 3h6v6m0-6L14 10M9 21H3v-6m0 6l7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 4. 설정 오버레이 모달 -->
+    <aside id="settings-modal" class="surf-settings-panel hidden">
+      <div class="settings-top-bar">
+        <h3 class="settings-title">Preferences</h3>
+        <button id="btn-close-settings" class="surf-icon-btn" title="Close">
+          <svg viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="settings-content-scroll">
+        <!-- 집중 시간 -->
+        <div class="pref-item">
+          <div class="pref-row">
+            <label for="setting-focus-time" class="pref-label">Focus Duration (Surf)</label>
+            <span id="val-focus-time" class="pref-val">25m</span>
+          </div>
+          <input type="range" id="setting-focus-time" min="5" max="90" step="5" value="25">
+          <div class="pref-presets">
+            <button class="preset-pill preset-btn-focus" data-mins="15">15m</button>
+            <button class="preset-pill preset-btn-focus" data-mins="25">25m</button>
+            <button class="preset-pill preset-btn-focus" data-mins="45">45m</button>
+            <button class="preset-pill preset-btn-focus" data-mins="50">50m</button>
+            <button class="preset-pill preset-btn-focus" data-mins="60">60m</button>
+          </div>
+        </div>
+
+        <!-- 휴식 시간 -->
+        <div class="pref-item">
+          <div class="pref-row">
+            <label for="setting-break-time" class="pref-label">Short Break</label>
+            <span id="val-break-time" class="pref-val">5m</span>
+          </div>
+          <input type="range" id="setting-break-time" min="1" max="30" step="1" value="5">
+          <div class="pref-presets">
+            <button class="preset-pill preset-btn-break" data-mins="3">3m</button>
+            <button class="preset-pill preset-btn-break" data-mins="5">5m</button>
+            <button class="preset-pill preset-btn-break" data-mins="10">10m</button>
+            <button class="preset-pill preset-btn-break" data-mins="15">15m</button>
+          </div>
+        </div>
+
+        <!-- 긴 휴식 시간 & 주기 -->
+        <div class="pref-item">
+          <div class="pref-row">
+            <label for="setting-long-break-time" class="pref-label">Long Break</label>
+            <span id="val-long-break-time" class="pref-val">15m</span>
+          </div>
+          <input type="range" id="setting-long-break-time" min="5" max="45" step="5" value="15">
+        </div>
+
+        <div class="pref-item">
+          <div class="pref-row">
+            <label for="setting-long-interval" class="pref-label">Long Break Interval</label>
+            <span id="val-long-interval" class="pref-val">4 cycles</span>
+          </div>
+          <input type="range" id="setting-long-interval" min="2" max="8" step="1" value="4">
+        </div>
+
+        <!-- 자동 시작 옵션 -->
+        <div class="pref-item">
+          <div class="pref-row">
+            <span class="pref-label">Auto-start Breaks</span>
+            <label class="surf-switch">
+              <input type="checkbox" id="setting-auto-break">
+              <span class="surf-switch-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="pref-item">
+          <div class="pref-row">
+            <span class="pref-label">Auto-start Focus</span>
+            <label class="surf-switch">
+              <input type="checkbox" id="setting-auto-focus">
+              <span class="surf-switch-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 사운드 옵션 -->
+        <div class="pref-item">
+          <div class="pref-row">
+            <span class="pref-label">Zen Chimes</span>
+            <button id="btn-test-sound" class="preset-pill" style="padding: 2px 8px;">Test Tone</button>
+          </div>
+          <div class="pref-row" style="margin-top: 6px;">
+            <span class="pref-sub-label">Sound Effects</span>
+            <label class="surf-switch">
+              <input type="checkbox" id="setting-sound-enabled" checked>
+              <span class="surf-switch-slider"></span>
+            </label>
+          </div>
+          <input type="range" id="setting-sound-volume" min="0" max="100" step="5" value="70" style="margin-top: 8px;">
+        </div>
+
+        <!-- 테마 설정 -->
+        <div class="pref-item">
+          <div class="pref-row">
+            <span class="pref-label">Theme</span>
+          </div>
+          <div class="theme-switch-group">
+            <label class="theme-pill-opt">
+              <input type="radio" name="theme-mode" id="theme-light" value="light" checked>
+              <span>Light (Surf)</span>
+            </label>
+            <label class="theme-pill-opt">
+              <input type="radio" name="theme-mode" id="theme-dark" value="dark">
+              <span>Dark</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 일일 기록 리셋 버튼 -->
+        <div class="pref-item" style="border: none;">
+          <button id="btn-settings-reset-cycles" class="btn-pref-reset">
+            Reset Today's Surf Cycles
+          </button>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/sound.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/timer.js"></script>
+  <script src="js/surf-ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
