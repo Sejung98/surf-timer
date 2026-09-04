@@ -161,15 +161,19 @@
         <div class="pref-item">
           <div class="pref-row">
             <label for="setting-focus-time" class="pref-label">Focus Duration (Surf)</label>
-            <span id="val-focus-time" class="pref-val">25m</span>
+            <div class="pref-stepper-row">
+              <button type="button" class="stepper-btn" id="btn-dec-focus" title="-5 Minutes">−</button>
+              <span id="val-focus-time" class="pref-val">25m</span>
+              <button type="button" class="stepper-btn" id="btn-inc-focus" title="+5 Minutes">+</button>
+            </div>
           </div>
           <input type="range" id="setting-focus-time" min="5" max="90" step="5" value="25">
           <div class="pref-presets">
-            <button class="preset-pill preset-btn-focus" data-mins="15">15m</button>
-            <button class="preset-pill preset-btn-focus" data-mins="25">25m</button>
-            <button class="preset-pill preset-btn-focus" data-mins="45">45m</button>
-            <button class="preset-pill preset-btn-focus" data-mins="50">50m</button>
-            <button class="preset-pill preset-btn-focus" data-mins="60">60m</button>
+            <button type="button" class="preset-pill preset-btn-focus" data-mins="15">15m</button>
+            <button type="button" class="preset-pill preset-btn-focus" data-mins="25">25m</button>
+            <button type="button" class="preset-pill preset-btn-focus" data-mins="45">45m</button>
+            <button type="button" class="preset-pill preset-btn-focus" data-mins="50">50m</button>
+            <button type="button" class="preset-pill preset-btn-focus" data-mins="60">60m</button>
           </div>
         </div>
 
@@ -177,14 +181,18 @@
         <div class="pref-item">
           <div class="pref-row">
             <label for="setting-break-time" class="pref-label">Short Break</label>
-            <span id="val-break-time" class="pref-val">5m</span>
+            <div class="pref-stepper-row">
+              <button type="button" class="stepper-btn" id="btn-dec-break" title="-1 Minute">−</button>
+              <span id="val-break-time" class="pref-val">5m</span>
+              <button type="button" class="stepper-btn" id="btn-inc-break" title="+1 Minute">+</button>
+            </div>
           </div>
           <input type="range" id="setting-break-time" min="1" max="30" step="1" value="5">
           <div class="pref-presets">
-            <button class="preset-pill preset-btn-break" data-mins="3">3m</button>
-            <button class="preset-pill preset-btn-break" data-mins="5">5m</button>
-            <button class="preset-pill preset-btn-break" data-mins="10">10m</button>
-            <button class="preset-pill preset-btn-break" data-mins="15">15m</button>
+            <button type="button" class="preset-pill preset-btn-break" data-mins="3">3m</button>
+            <button type="button" class="preset-pill preset-btn-break" data-mins="5">5m</button>
+            <button type="button" class="preset-pill preset-btn-break" data-mins="10">10m</button>
+            <button type="button" class="preset-pill preset-btn-break" data-mins="15">15m</button>
           </div>
         </div>
 

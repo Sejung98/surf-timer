@@ -479,6 +479,7 @@ body {
   display: flex;
   flex-direction: column;
   padding: 12px 16px;
+  -webkit-app-region: no-drag; /* 드래그 차단하여 슬라이더 및 버튼 입력 보장 */
 }
 
 .settings-top-bar {
@@ -487,13 +488,18 @@ body {
   justify-content: space-between;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--surf-border);
-  -webkit-app-region: drag;
+  -webkit-app-region: drag; /* 상단 얇은 바만 드래그 허용 */
+}
+
+.settings-top-bar .surf-icon-btn {
+  -webkit-app-region: no-drag;
 }
 
 .settings-title {
   font-size: 13px;
   font-weight: 600;
   color: var(--surf-text-primary);
+  pointer-events: none;
 }
 
 .settings-content-scroll {
@@ -503,6 +509,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  -webkit-app-region: no-drag;
 }
 
 .settings-content-scroll::-webkit-scrollbar {
@@ -516,15 +523,47 @@ body {
 .pref-item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--surf-border);
+  -webkit-app-region: no-drag;
 }
 
 .pref-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  -webkit-app-region: no-drag;
+}
+
+.pref-stepper-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  -webkit-app-region: no-drag;
+}
+
+.stepper-btn {
+  border: 1px solid var(--surf-border);
+  background: transparent;
+  color: var(--surf-text-secondary);
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  -webkit-app-region: no-drag;
+}
+
+.stepper-btn:hover {
+  border-color: var(--surf-accent);
+  color: var(--surf-accent);
+  background: var(--surf-accent-bg);
 }
 
 .pref-label {
@@ -548,6 +587,7 @@ body {
   display: flex;
   gap: 4px;
   margin-top: 2px;
+  -webkit-app-region: no-drag;
 }
 
 .preset-pill {
@@ -556,33 +596,57 @@ body {
   color: var(--surf-text-secondary);
   font-size: 10.5px;
   font-weight: 500;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
+  -webkit-app-region: no-drag;
 }
 
 .preset-pill:hover {
   border-color: var(--surf-accent);
   color: var(--surf-accent);
+  background: var(--surf-accent-bg);
 }
 
-/* 슬라이더 */
+/* 슬라이더 바 완벽 개선 (터치/클릭 영역 확대 및 부드러운 드래그) */
 input[type="range"] {
   width: 100%;
-  height: 3px;
-  background: var(--surf-border);
+  height: 20px;
+  background: transparent;
   outline: none;
   -webkit-appearance: none;
+  cursor: pointer;
+  -webkit-app-region: no-drag !important;
+  margin: 2px 0;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 6px;
+  background: var(--surf-border);
+  border-radius: 999px;
+  cursor: pointer;
+  -webkit-app-region: no-drag !important;
 }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 13px;
-  height: 13px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: var(--surf-accent);
   cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  margin-top: -6px; /* 6px 트랙의 중앙 정렬: (6 - 18) / 2 = -6px */
+  transition: transform 0.12s ease, background 0.15s ease;
+  -webkit-app-region: no-drag !important;
+}
+
+input[type="range"]:hover::-webkit-slider-thumb,
+input[type="range"]:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+  background: var(--surf-accent-hover);
 }
 
 /* 스위치 */

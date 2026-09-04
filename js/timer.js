@@ -31,14 +31,16 @@ class PomodoroTimer {
 
   syncFromSettings() {
     const settings = this.storage.settings;
-    if (this.state === 'idle') {
-      if (this.mode === 'focus') {
-        this.totalSeconds = settings.focusTime * 60;
-      } else if (this.mode === 'shortBreak') {
-        this.totalSeconds = settings.breakTime * 60;
-      } else if (this.mode === 'longBreak') {
-        this.totalSeconds = settings.longBreakTime * 60;
-      }
+    if (this.mode === 'focus') {
+      this.totalSeconds = settings.focusTime * 60;
+    } else if (this.mode === 'shortBreak') {
+      this.totalSeconds = settings.breakTime * 60;
+    } else if (this.mode === 'longBreak') {
+      this.totalSeconds = settings.longBreakTime * 60;
+    }
+
+    // 타이머가 작동 중이 아니면 남은 시간도 새 시간으로 즉시 동기화
+    if (this.state !== 'running') {
       this.remainingSeconds = this.totalSeconds;
       this.emitTick();
     }

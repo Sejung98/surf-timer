@@ -340,55 +340,87 @@ class SurfUIController {
     }
   }
 
-  setupSettingsInputListeners() {
-    this.dom.inputFocusTime.addEventListener('input', (e) => {
-      const val = parseInt(e.target.value, 10);
-      this.dom.valFocusTime.textContent = `${val}m`;
-      this.storage.saveSettings({ focusTime: val });
-      this.timer.syncFromSettings();
+    // Focus Steppers (-5m, +5m)
+    const btnDecFocus = document.getElementById('btn-dec-focus');
+    const btnIncFocus = document.getElementById('btn-inc-focus');
+    if (btnDecFocus) {
+      btnDecFocus.addEventListener('click', () => {
+        this.sound.playClick();
+        const current = parseInt(this.dom.inputFocusTime.value, 10);
+        const next = Math.max(5, current - 5);
+        this.updateFocusTime(next);
+      });
+    }
+    if (btnIncFocus) {
+      btnIncFocus.addEventListener('click', () => {
+        this.sound.playClick();
+        const current = parseInt(this.dom.inputFocusTime.value, 10);
+        const next = Math.min(90, current + 5);
+        this.updateFocusTime(next);
+      });
+    }
+
+    // Break Steppers (-1m, +1m)
+    const btnDecBreak = document.getElementById('btn-dec-break');
+    const btnIncBreak = document.getElementById('btn-inc-break');
+    if (btnDecBreak) {
+      btnDecBreak.addEventListener('click', () => {
+        this.sound.playClick();
+        const current = parseInt(this.dom.inputBreakTime.value, 10);
+        const next = Math.max(1, current - 1);
+        this.updateBreakTime(next);
+      });
+    }
+    if (btnIncBreak) {
+      btnIncBreak.addEventListener('click', () => {
+        this.sound.playClick();
+        const current = parseInt(this.dom.inputBreakTime.value, 10);
+        const next = Math.min(30, current + 1);
+        this.updateBreakTime(next);
+      });
+    }
+
+    // 슬라이더 이벤트 (input & change 둘 다 바인딩하여 실시간 즉시 반영)
+    ['input', 'change'].forEach(evt => {
+      this.dom.inputFocusTime.addEventListener(evt, (e) => {
+        const val = parseInt(e.target.value, 10);
+        this.updateFocusTime(val);
+      });
+
+      this.dom.inputBreakTime.addEventListener(evt, (e) => {
+        const val = parseInt(e.target.value, 10);
+        this.updateBreakTime(val);
+      });
+
+      this.dom.inputLongBreakTime.addEventListener(evt, (e) => {
+        const val = parseInt(e.target.value, 10);
+        this.dom.valLongBreakTime.textContent = `${val}m`;
+        this.storage.saveSettings({ longBreakTime: val });
+        this.timer.syncFromSettings();
+      });
+
+      this.dom.inputLongInterval.addEventListener(evt, (e) => {
+        const val = parseInt(e.target.value, 10);
+        this.dom.valLongInterval.textContent = `${val} cycles`;
+        this.storage.saveSettings({ longBreakInterval: val });
+        this.renderDailyDots();
+      });
     });
 
     document.querySelectorAll('.preset-btn-focus').forEach(btn => {
       btn.addEventListener('click', () => {
         this.sound.playClick();
         const mins = parseInt(btn.dataset.mins, 10);
-        this.dom.inputFocusTime.value = mins;
-        this.dom.valFocusTime.textContent = `${mins}m`;
-        this.storage.saveSettings({ focusTime: mins });
-        this.timer.syncFromSettings();
+        this.updateFocusTime(mins);
       });
-    });
-
-    this.dom.inputBreakTime.addEventListener('input', (e) => {
-      const val = parseInt(e.target.value, 10);
-      this.dom.valBreakTime.textContent = `${val}m`;
-      this.storage.saveSettings({ breakTime: val });
-      this.timer.syncFromSettings();
     });
 
     document.querySelectorAll('.preset-btn-break').forEach(btn => {
       btn.addEventListener('click', () => {
         this.sound.playClick();
         const mins = parseInt(btn.dataset.mins, 10);
-        this.dom.inputBreakTime.value = mins;
-        this.dom.valBreakTime.textContent = `${mins}m`;
-        this.storage.saveSettings({ breakTime: mins });
-        this.timer.syncFromSettings();
+        this.updateBreakTime(mins);
       });
-    });
-
-    this.dom.inputLongBreakTime.addEventListener('input', (e) => {
-      const val = parseInt(e.target.value, 10);
-      this.dom.valLongBreakTime.textContent = `${val}m`;
-      this.storage.saveSettings({ longBreakTime: val });
-      this.timer.syncFromSettings();
-    });
-
-    this.dom.inputLongInterval.addEventListener('input', (e) => {
-      const val = parseInt(e.target.value, 10);
-      this.dom.valLongInterval.textContent = `${val} cycles`;
-      this.storage.saveSettings({ longBreakInterval: val });
-      this.renderDailyDots();
     });
 
     this.dom.toggleAutoBreak.addEventListener('change', (e) => {
@@ -422,6 +454,22 @@ class SurfUIController {
         this.applyTheme();
       });
     });
+  }
+
+  updateFocusTime(mins) {
+    mins = Math.max(1, Math.min(180, mins));
+    this.dom.inputFocusTime.value = mins;
+    this.dom.valFocusTime.textContent = `${mins}m`;
+    this.storage.saveSettings({ focusTime: mins });
+    this.timer.syncFromSettings();
+  }
+
+  updateBreakTime(mins) {
+    mins = Math.max(1, Math.min(60, mins));
+    this.dom.inputBreakTime.value = mins;
+    this.dom.valBreakTime.textContent = `${mins}m`;
+    this.storage.saveSettings({ breakTime: mins });
+    this.timer.syncFromSettings();
   }
 
   applyTheme() {
